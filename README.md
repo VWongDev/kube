@@ -23,3 +23,10 @@ Start local development environment:
 ```sh
 make -f k3d/Makefile skaffold-dev
 ```
+
+## Amazon Web Services
+### Prerequisites
+A new AWS account can be bootstrapped for Terraform management
+```sh 
+aws cloudformation deploy --stack-name bootstrap --template-file aws/bootstrap.yaml
+```

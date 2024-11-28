@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates resources to bootstrap a new AWS account for Terraform management.
+
+Resources:
+  TerraformStateBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub "tf-state-bucket-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  TerraformStateBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TerraformStateBucket
+      PolicyDocument:
+        Statement:
+          - Sid: Deny deletion of objects
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${TerraformStateBucket.Arn}/*"
+          - Sid: Deny requests that do not use TLS
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:*
+            Resource: !Sub "${TerraformStateBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: Deny object uploads not using default encryption settings
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${TerraformStateBucket.Arn}/*"
+            Condition:
+              "Null":
+                s3:x-amz-server-side-encryption: false
+              StringNotEqualsIfExists:
+                s3:x-amz-server-side-encryption:
+                  - AES256
+                  - aws:kms
+
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tf-state-table
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: LockID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LockID
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
