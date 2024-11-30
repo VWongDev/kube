@@ -26,7 +26,7 @@ make -f k3d/Makefile skaffold-dev
 
 ## Amazon Web Services
 ### Prerequisites
-A new AWS account can be bootstrapped for Terraform management
+A new AWS account can be bootstrapped for Terraform management. This must be run manually outside CI/CD for the first time
 ```sh 
-aws cloudformation deploy --stack-name bootstrap --template-file aws/bootstrap.yaml
+aws cloudformation deploy --stack-name bootstrap --template-file aws/bootstrap.yaml --parameter-overrides OrgName=org-name RepoName=repo-name --capabilities CAPABILITY_NAMED_IAM
 ```
