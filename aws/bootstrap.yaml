@@ -1,7 +1,44 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Creates resources to bootstrap a new AWS account for Terraform management.
+             Must be run manually outside CI/CD for the first time!
+
+Parameters:
+  OrgName:
+    Type: String
+    Description: Name of the organization.
+  RepoName:
+    Type: String
+    Description: Name of the repository.
 
 Resources:
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - D89E3BD43D5D909B47A18977AA9D5CE36CEE184C
+
+  PrimaryPipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: PrimaryPipelineRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !GetAtt GitHubOIDCProvider.Arn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${OrgName}/${RepoName}:environment:*"
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
   TerraformStateBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
