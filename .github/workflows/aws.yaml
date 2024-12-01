@@ -1,0 +1,30 @@
+name: Deploy to Amazon Web Services
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-to-aws:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [ dev ]
+    environment: ${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT }}:role/PrimaryPipelineRole
+          role-session-name: github-workflows-session
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: |
+          aws cloudformation deploy \
+            --stack-name bootstrap \
+            --template-file aws/bootstrap.yaml \
+            --parameter-overrides OrgName=${{ github.repository_owner }} RepoName=${{ github.event.repository.name }} \
+            --capabilities CAPABILITY_NAMED_IAM
