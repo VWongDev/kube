@@ -30,3 +30,9 @@ A new AWS account can be bootstrapped for Terraform management. This must be run
 ```sh 
 aws cloudformation deploy --stack-name bootstrap --template-file aws/bootstrap.yaml --parameter-overrides OrgName=org-name RepoName=repo-name --capabilities CAPABILITY_NAMED_IAM
 ```
+
+Subsequent runs for bootstrapping can be triggered via Github workflows. This requires setting the following environment configuration variables in the repository settings
+```
+AWS_ACCOUNT=123456789012
+AWS_REGION=us-east-1
+```
