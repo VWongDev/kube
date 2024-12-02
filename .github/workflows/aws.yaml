@@ -28,3 +28,14 @@ jobs:
             --template-file aws/bootstrap.yaml \
             --parameter-overrides OrgName=${{ github.repository_owner }} RepoName=${{ github.event.repository.name }} \
             --capabilities CAPABILITY_NAMED_IAM
+      - run: |
+          terraform init \
+            -backend-config="bucket=tf-state-bucket-${{ vars.AWS_ACCOUNT }}" \
+            -backend-config="key=terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="dynamodb_table=tf-state-table"
+        working-directory: aws
+      - run: |
+          terraform apply -auto-approve \
+            -var="region=${{ vars.AWS_REGION }}"
+        working-directory: aws
