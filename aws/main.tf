@@ -15,3 +15,8 @@ module "vpc" {
     source  = "./modules/vpc"
     region = var.region
 }
+
+module "eks" {
+    source  = "./modules/eks"
+    subnet_ids = module.vpc.private_subnet_ids
+}
