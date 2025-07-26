@@ -1,0 +1,14 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: sample-app
+build:
+  artifacts:
+    - image: app
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  rawYaml:
+    - manifests/app.yaml
+    - manifests/db.yaml
+    - manifests/ingress.yaml
