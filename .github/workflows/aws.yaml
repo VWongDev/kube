@@ -39,3 +39,5 @@ jobs:
           terraform apply -auto-approve \
             -var="region=${{ vars.AWS_REGION }}"
         working-directory: aws
+      - run: aws eks update-kubeconfig --name kube-cluster --region ${{ vars.AWS_REGION }}
+      - run: sh common/init/install-argocd.sh
