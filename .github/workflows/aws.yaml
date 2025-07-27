@@ -22,6 +22,10 @@ jobs:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT }}:role/PrimaryPipelineRole
           role-session-name: github-workflows-session
           aws-region: ${{ vars.AWS_REGION }}
+      - name: Install deployment dependencies
+        run: |
+          curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
       - run: |
           aws cloudformation deploy \
             --stack-name bootstrap \
@@ -40,4 +44,5 @@ jobs:
             -var="region=${{ vars.AWS_REGION }}"
         working-directory: aws
       - run: aws eks update-kubeconfig --name kube-cluster --region ${{ vars.AWS_REGION }}
+      - run: AWS_ACCOUNT=${{ vars.AWS_ACCOUNT }} sh aws/init/install-access-role.sh
       - run: sh common/init/install-argocd.sh
